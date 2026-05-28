@@ -1,0 +1,18 @@
+{
+  "stress": {
+    "safety": "Consult a doctor if stress is severe, persistent, or linked with chest pain.",
+    "suggestions": [
+      "Practice deep breathing for 5 minutes.",
+      "Try light evening yoga.",
+      "Reduce caffeine late in the day."
+    ]
+  },
+  "poor_sleep": {
+    "safety": "Consult a doctor if sleep problems continue for many days.",
+    "suggestions": [
+      "Keep a fixed sleep time.",
+      "Avoid screens before bed.",
+      "Try guided relaxation audio."
+    ]
+  }
+}
