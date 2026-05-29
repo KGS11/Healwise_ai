@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/auth_service.dart';
 import 'auth_copy.dart';
 import 'profile_setup_screen.dart';
 import 'widgets/auth_action_footer.dart';
 import 'widgets/auth_header.dart';
 import 'widgets/auth_text_field.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key, required this.languageName});
 
   final String languageName;
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _hidePassword = true;
+  bool _isLoading = false;
 
   AuthCopy get _copy => AuthCopy(widget.languageName);
 
@@ -32,16 +35,50 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ProfileSetupScreen(languageName: widget.languageName),
-      ),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      
+      // Call Firebase Auth to create a user
+      final userCredential = await authService.signUpWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      // Update Firebase user profile with their name
+      await userCredential.user?.updateDisplayName(_nameController.text.trim());
+
+      if (!mounted) return;
+
+      // Navigate to ProfileSetupScreen on success
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ProfileSetupScreen(languageName: widget.languageName),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   String? _required(String? value) {
@@ -135,11 +172,13 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      FilledButton.icon(
-                        onPressed: _submit,
-                        icon: const Icon(Icons.person_add_alt_1_outlined),
-                        label: Text(_copy.signupButton),
-                      ),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : FilledButton.icon(
+                              onPressed: _submit,
+                              icon: const Icon(Icons.person_add_alt_1_outlined),
+                              label: Text(_copy.signupButton),
+                            ),
                     ],
                   ),
                 ),

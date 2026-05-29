@@ -1,20 +1,23 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/navigation/main_navigation_screen.dart';
+import '../data/user_profile_repository.dart';
 import 'auth_copy.dart';
 import 'widgets/auth_header.dart';
 import 'widgets/auth_text_field.dart';
 
-class ProfileSetupScreen extends StatefulWidget {
+class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key, required this.languageName});
 
   final String languageName;
 
   @override
-  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+  ConsumerState<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
@@ -23,8 +26,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _historyController = TextEditingController();
   final _habitsController = TextEditingController();
   String _gender = 'Prefer not to say';
+  bool _isLoading = false;
 
   AuthCopy get _copy => AuthCopy(widget.languageName);
+
+  @override
+  void initState() {
+    super.initState();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final displayName = currentUser?.displayName;
+    if (displayName != null && displayName.isNotEmpty) {
+      _nameController.text = displayName;
+    }
+  }
 
   @override
   void dispose() {
@@ -37,20 +51,74 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => MainNavigationScreen(
-          languageName: widget.languageName,
-          userName: _nameController.text.trim(),
+    setState(() {
+      _isLoading = true;
+    });
+
+    final name = _nameController.text.trim();
+    final age = int.tryParse(_ageController.text.trim()) ?? 0;
+    final height = double.tryParse(_heightController.text.trim()) ?? 0.0;
+    final weight = double.tryParse(_weightController.text.trim()) ?? 0.0;
+    final healthHistory = _historyController.text.trim();
+    final lifestyleHabits = _habitsController.text.trim();
+
+    try {
+      debugPrint('[ProfileSetup] Save tapped. Validated form for "$name".');
+      await ref
+          .read(userProfileRepositoryProvider)
+          .saveCurrentUserProfile(
+            fullName: name,
+            age: age,
+            gender: _gender,
+            height: height,
+            weight: weight,
+            healthHistory: healthHistory,
+            lifestyleHabits: lifestyleHabits,
+          );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved successfully.')),
+      );
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => MainNavigationScreen(
+            languageName: widget.languageName,
+            userName: name,
+          ),
         ),
-      ),
-      (_) => false,
-    );
+        (_) => false,
+      );
+    } on UserProfileException catch (error) {
+      debugPrint('[ProfileSetup] Profile save failed: ${error.message}');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (e) {
+      debugPrint('[ProfileSetup] Unexpected profile save error: $e');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save profile. Please try again.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   String? _required(String? value) {
@@ -97,6 +165,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         icon: Icons.badge_outlined,
                         textInputAction: TextInputAction.next,
                         validator: _required,
+                        enabled: !_isLoading,
                       ),
                       const SizedBox(height: 14),
                       AuthTextField(
@@ -106,6 +175,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.next,
                         validator: _requiredNumber,
+                        enabled: !_isLoading,
                       ),
                       const SizedBox(height: 14),
                       DropdownButtonFormField<String>(
@@ -129,14 +199,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             child: Text('Other'),
                           ),
                         ],
-                        onChanged: (value) {
-                          if (value == null) {
-                            return;
-                          }
-                          setState(() {
-                            _gender = value;
-                          });
-                        },
+                        onChanged: _isLoading
+                            ? null
+                            : (value) {
+                                if (value == null) {
+                                  return;
+                                }
+                                setState(() {
+                                  _gender = value;
+                                });
+                              },
                       ),
                       const SizedBox(height: 14),
                       Row(
@@ -149,6 +221,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.next,
                               validator: _requiredNumber,
+                              enabled: !_isLoading,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -160,6 +233,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.next,
                               validator: _requiredNumber,
+                              enabled: !_isLoading,
                             ),
                           ),
                         ],
@@ -171,6 +245,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         icon: Icons.medical_information_outlined,
                         hintText: 'Example: mild BP, poor sleep',
                         maxLines: 2,
+                        enabled: !_isLoading,
                       ),
                       const SizedBox(height: 14),
                       AuthTextField(
@@ -179,13 +254,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         icon: Icons.self_improvement_outlined,
                         hintText: 'Example: low water intake, late sleep',
                         maxLines: 2,
+                        enabled: !_isLoading,
                       ),
                       const SizedBox(height: 18),
-                      FilledButton.icon(
-                        onPressed: _submit,
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: Text(_copy.saveProfile),
-                      ),
+                      _isLoading
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          : FilledButton.icon(
+                              onPressed: _submit,
+                              icon: const Icon(Icons.check_circle_outline),
+                              label: Text(_copy.saveProfile),
+                            ),
                     ],
                   ),
                 ),

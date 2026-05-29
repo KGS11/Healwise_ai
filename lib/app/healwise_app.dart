@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
-import '../features/language/presentation/language_selection_screen.dart';
+import '../features/auth/presentation/auth_wrapper.dart';
 
 class HealWiseApp extends StatelessWidget {
   const HealWiseApp({super.key});
@@ -12,7 +12,7 @@ class HealWiseApp extends StatelessWidget {
       title: 'HealWise AI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const LanguageSelectionScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../chatbot/presentation/ai_chatbot_screen.dart';
+import '../../progress/presentation/progress_tracker_screen.dart';
 import '../../reports/presentation/medical_report_screen.dart';
 
 class HomeDashboardScreen extends StatelessWidget {
@@ -57,6 +58,8 @@ class HomeDashboardScreen extends StatelessWidget {
                     ? _openChatbot(context)
                     : feature.opensReports
                     ? _openReports(context)
+                    : feature.opensProgress
+                    ? _openProgress(context)
                     : _showComingSoon(context, feature.title),
               );
             },
@@ -85,6 +88,17 @@ class HomeDashboardScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => MedicalReportScreen(languageName: languageName),
+      ),
+    );
+  }
+
+  void _openProgress(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Progress Tracker')),
+          body: ProgressTrackerScreen(languageName: languageName),
+        ),
       ),
     );
   }
@@ -430,6 +444,7 @@ class _DashboardCopy {
       title: isKannada ? 'ಪ್ರಗತಿ ಟ್ರ್ಯಾಕರ್' : 'Progress Tracker',
       subtitle: isKannada ? 'ಆರೋಗ್ಯ ಟ್ರೆಂಡ್‌ಗಳು' : 'Health trends',
       color: const Color(0xFF16A34A),
+      opensProgress: true,
     ),
     _FeatureInfo(
       icon: Icons.functions,
@@ -454,6 +469,7 @@ class _FeatureInfo {
     required this.color,
     this.opensChatbot = false,
     this.opensReports = false,
+    this.opensProgress = false,
   });
 
   final IconData icon;
@@ -462,4 +478,5 @@ class _FeatureInfo {
   final Color color;
   final bool opensChatbot;
   final bool opensReports;
+  final bool opensProgress;
 }

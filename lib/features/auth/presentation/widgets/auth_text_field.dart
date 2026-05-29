@@ -13,6 +13,7 @@ class AuthTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.maxLines = 1,
+    this.enabled,
   });
 
   final TextEditingController controller;
@@ -25,6 +26,7 @@ class AuthTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final int maxLines;
+  final bool? enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,7 @@ class AuthTextField extends StatelessWidget {
       validator: validator,
       obscureText: obscureText,
       maxLines: maxLines,
+      enabled: enabled,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         labelText: label,

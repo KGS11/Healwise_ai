@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/navigation/main_navigation_screen.dart';
+import '../domain/auth_service.dart';
 import 'auth_copy.dart';
 import 'profile_setup_screen.dart';
 import 'signup_screen.dart';
@@ -7,20 +10,21 @@ import 'widgets/auth_action_footer.dart';
 import 'widgets/auth_header.dart';
 import 'widgets/auth_text_field.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, required this.languageName});
 
   final String languageName;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _hidePassword = true;
+  bool _isLoading = false;
 
   AuthCopy get _copy => AuthCopy(widget.languageName);
 
@@ -31,15 +35,111 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    Navigator.of(context).pushReplacement(
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.loginWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (!mounted) return;
+      await _openNextScreenAfterLogin();
+    } catch (e) {
+      debugPrint('[Login] Email login failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithGoogle();
+
+      if (!mounted) return;
+      await _openNextScreenAfterLogin();
+    } catch (e) {
+      debugPrint('[Login] Google login failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openNextScreenAfterLogin() async {
+    final authService = ref.read(authServiceProvider);
+    final user = authService.currentUser;
+
+    if (user == null) {
+      debugPrint('[Login] Auth success callback but currentUser is null.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login failed. Please try again.')),
+      );
+      return;
+    }
+
+    debugPrint('[Login] Authenticated uid=${user.uid}');
+    final isProfileComplete = await authService.isProfileComplete(user.uid);
+    debugPrint(
+      '[Login] Profile exists for uid=${user.uid}: $isProfileComplete',
+    );
+
+    if (!mounted) return;
+
+    if (isProfileComplete) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => MainNavigationScreen(
+            languageName: widget.languageName,
+            userName: user.displayName?.trim().isNotEmpty == true
+                ? user.displayName!.trim()
+                : 'Wellness Friend',
+          ),
+        ),
+        (_) => false,
+      );
+      return;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => ProfileSetupScreen(languageName: widget.languageName),
       ),
+      (_) => false,
     );
   }
 
@@ -134,17 +234,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      FilledButton.icon(
-                        onPressed: _submit,
-                        icon: const Icon(Icons.login),
-                        label: Text(_copy.loginButton),
-                      ),
-                      const SizedBox(height: 10),
-                      OutlinedButton.icon(
-                        onPressed: _continueDemo,
-                        icon: const Icon(Icons.person_outline),
-                        label: Text(_copy.continueAsGuest),
-                      ),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : Column(
+                              children: [
+                                FilledButton.icon(
+                                  onPressed: _submit,
+                                  icon: const Icon(Icons.login),
+                                  label: Text(_copy.loginButton),
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  onPressed: _signInWithGoogle,
+                                  icon: const Icon(
+                                    Icons.golf_course,
+                                  ), // Custom icon for Google Sign-In
+                                  label: const Text('Sign in with Google'),
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  onPressed: _continueDemo,
+                                  icon: const Icon(Icons.person_outline),
+                                  label: Text(_copy.continueAsGuest),
+                                ),
+                              ],
+                            ),
                     ],
                   ),
                 ),

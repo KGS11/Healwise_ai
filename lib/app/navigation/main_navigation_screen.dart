@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/healwise_bottom_navigation_bar.dart';
 import '../../features/chatbot/presentation/ai_chatbot_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
-import '../../features/progress/presentation/progress_placeholder_screen.dart';
+import '../../features/progress/presentation/progress_tracker_screen.dart';
 import '../../features/auth/presentation/profile_placeholder_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         userName: widget.userName,
       ),
       AiChatbotScreen(languageName: widget.languageName),
-      ProgressPlaceholderScreen(languageName: widget.languageName),
+      ProgressTrackerScreen(languageName: widget.languageName),
       ProfilePlaceholderScreen(
         userName: widget.userName,
         languageName: widget.languageName,
@@ -55,9 +55,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 220),
-        child: KeyedSubtree(
+        child: IndexedStack(
           key: ValueKey(_currentIndex),
-          child: screens[_currentIndex],
+          index: _currentIndex,
+          children: screens,
         ),
       ),
       bottomNavigationBar: HealWiseBottomNavigationBar(

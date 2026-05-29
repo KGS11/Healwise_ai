@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfilePlaceholderScreen extends StatelessWidget {
+import '../domain/auth_service.dart';
+
+class ProfilePlaceholderScreen extends ConsumerWidget {
   const ProfilePlaceholderScreen({
     super.key,
     required this.userName,
@@ -11,7 +14,7 @@ class ProfilePlaceholderScreen extends StatelessWidget {
   final String languageName;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
@@ -53,6 +56,25 @@ class ProfilePlaceholderScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Chip(label: Text('$languageName selected')),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.red.shade800,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () async {
+                      try {
+                        await ref.read(authServiceProvider).signOut();
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Sign out failed: $e')),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Sign Out'),
+                  ),
                 ],
               ),
             ),
