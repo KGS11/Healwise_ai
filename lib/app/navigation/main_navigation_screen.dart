@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/widgets/healwise_bottom_navigation_bar.dart';
-import '../../features/chatbot/presentation/ai_chatbot_screen.dart';
+import '../../features/chatbot/presentation/chatbot_screen.dart';
 import '../../features/home/presentation/home_dashboard_screen.dart';
 import '../../features/progress/presentation/progress_tracker_screen.dart';
 import '../../features/auth/presentation/profile_placeholder_screen.dart';
@@ -30,7 +30,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         languageName: widget.languageName,
         userName: widget.userName,
       ),
-      AiChatbotScreen(languageName: widget.languageName),
+      ChatbotScreen(languageName: widget.languageName),
       ProgressTrackerScreen(languageName: widget.languageName),
       ProfilePlaceholderScreen(
         userName: widget.userName,

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../chatbot/presentation/ai_chatbot_screen.dart';
+import '../../chatbot/presentation/chatbot_screen.dart';
+import '../../daa_dashboard/presentation/daa_dashboard_screen.dart';
+import '../../guidance/presentation/audio_guidance_screen.dart';
+import '../../guidance/presentation/video_guidance_screen.dart';
+import '../../hospitals/presentation/hospitals_screen.dart';
+import '../../math_dashboard/presentation/math_dashboard_screen.dart';
 import '../../progress/presentation/progress_tracker_screen.dart';
 import '../../reports/presentation/medical_report_screen.dart';
+import '../../yoga/presentation/yoga_screen.dart';
 
 class HomeDashboardScreen extends StatelessWidget {
   const HomeDashboardScreen({
@@ -60,6 +66,18 @@ class HomeDashboardScreen extends StatelessWidget {
                     ? _openReports(context)
                     : feature.opensProgress
                     ? _openProgress(context)
+                    : feature.opensHospitals
+                    ? _openHospitals(context)
+                    : feature.opensAudioGuidance
+                    ? _openAudioGuidance(context)
+                    : feature.opensVideoGuidance
+                    ? _openVideoGuidance(context)
+                    : feature.opensYoga
+                    ? _openYoga(context)
+                    : feature.opensMath
+                    ? _openMathDashboard(context)
+                    : feature.opensDaa
+                    ? _openDaaDashboard(context)
                     : _showComingSoon(context, feature.title),
               );
             },
@@ -78,8 +96,7 @@ class HomeDashboardScreen extends StatelessWidget {
   void _openChatbot(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            AiChatbotScreen(languageName: languageName, showAppBar: true),
+        builder: (_) => ChatbotScreen(languageName: languageName),
       ),
     );
   }
@@ -100,6 +117,42 @@ class HomeDashboardScreen extends StatelessWidget {
           body: ProgressTrackerScreen(languageName: languageName),
         ),
       ),
+    );
+  }
+
+  void _openHospitals(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const HospitalsScreen()));
+  }
+
+  void _openAudioGuidance(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AudioGuidanceScreen()),
+    );
+  }
+
+  void _openVideoGuidance(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const VideoGuidanceScreen()),
+    );
+  }
+
+  void _openYoga(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const YogaScreen()));
+  }
+
+  void _openMathDashboard(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const MathDashboardScreen()),
+    );
+  }
+
+  void _openDaaDashboard(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const DaaDashboardScreen()),
     );
   }
 }
@@ -420,24 +473,28 @@ class _DashboardCopy {
       title: isKannada ? 'ಯೋಗ ಸಹಾಯಕ' : 'Yoga Assistant',
       subtitle: isKannada ? 'ಪೋಸ್ ಮಾರ್ಗದರ್ಶನ' : 'Pose guidance',
       color: const Color(0xFF7C3AED),
+      opensYoga: true,
     ),
     _FeatureInfo(
       icon: Icons.headphones_outlined,
       title: isKannada ? 'ಆಡಿಯೋ ಮಾರ್ಗದರ್ಶನ' : 'Audio Guidance',
       subtitle: isKannada ? 'ಧ್ಯಾನ ಮತ್ತು ನಿದ್ರೆ' : 'Meditation audio',
       color: const Color(0xFF0891B2),
+      opensAudioGuidance: true,
     ),
     _FeatureInfo(
       icon: Icons.ondemand_video_outlined,
       title: isKannada ? 'ವೀಡಿಯೋ ಮಾರ್ಗದರ್ಶನ' : 'Video Guidance',
       subtitle: isKannada ? 'ಯೋಗ ಟ್ಯುಟೋರಿಯಲ್' : 'Yoga tutorials',
       color: const Color(0xFFEA580C),
+      opensVideoGuidance: true,
     ),
     _FeatureInfo(
       icon: Icons.local_hospital_outlined,
       title: isKannada ? 'ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗಳು' : 'Nearby Hospitals',
       subtitle: isKannada ? 'ನಕ್ಷೆ ಮತ್ತು ಸಂಪರ್ಕ' : 'Maps and contacts',
       color: const Color(0xFFDC2626),
+      opensHospitals: true,
     ),
     _FeatureInfo(
       icon: Icons.show_chart,
@@ -451,12 +508,14 @@ class _DashboardCopy {
       title: isKannada ? 'ಗಣಿತ ಡ್ಯಾಶ್ಬೋರ್ಡ್' : 'Mathematical Dashboard',
       subtitle: isKannada ? 'ಅಂಕಿಅಂಶ ಗ್ರಾಫ್‌ಗಳು' : 'Statistics graphs',
       color: const Color(0xFF4F46E5),
+      opensMath: true,
     ),
     _FeatureInfo(
       icon: Icons.account_tree_outlined,
       title: isKannada ? 'DAA ಡ್ಯಾಶ್ಬೋರ್ಡ್' : 'DAA Dashboard',
       subtitle: isKannada ? 'ಅಲ್ಗೋರಿದಮ್ ದೃಶ್ಯಗಳು' : 'Algorithm visuals',
       color: const Color(0xFFBE123C),
+      opensDaa: true,
     ),
   ];
 }
@@ -470,6 +529,12 @@ class _FeatureInfo {
     this.opensChatbot = false,
     this.opensReports = false,
     this.opensProgress = false,
+    this.opensHospitals = false,
+    this.opensAudioGuidance = false,
+    this.opensVideoGuidance = false,
+    this.opensYoga = false,
+    this.opensMath = false,
+    this.opensDaa = false,
   });
 
   final IconData icon;
@@ -479,4 +544,10 @@ class _FeatureInfo {
   final bool opensChatbot;
   final bool opensReports;
   final bool opensProgress;
+  final bool opensHospitals;
+  final bool opensAudioGuidance;
+  final bool opensVideoGuidance;
+  final bool opensYoga;
+  final bool opensMath;
+  final bool opensDaa;
 }

@@ -174,6 +174,7 @@ class _PlaceholderLineChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final values = [48.0, 56.0, 52.0, 64.0, 70.0, 76.0, 82.0];
+    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Card(
       child: Padding(
@@ -189,36 +190,59 @@ class _PlaceholderLineChart extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 130,
+              height: 140,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  for (final value in values)
+                  for (int i = 0; i < values.length; i++)
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          height: value,
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF0F766E,
-                            ).withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF0F766E)),
-                          ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${values[i].round()}%',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F766E),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0F766E).withValues(alpha: 0.16),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFF0F766E), width: 1.5),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              weekdays[i],
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF53645F),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              copy.chartPlaceholder,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280)),
+            const SizedBox(height: 10),
+            const Text(
+              'Wellness Score Trend over the last 7 days. Higher percentages indicate consistent daily routines (hydration, yoga sessions, and sleep timings).',
+              style: TextStyle(
+                color: Color(0xFF6B7280),
+                fontSize: 12,
+                height: 1.35,
+              ),
             ),
           ],
         ),
